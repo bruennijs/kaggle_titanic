@@ -1,11 +1,30 @@
 import numpy as np
 
 from pandas import DataFrame, Series
+from sklearn.base import TransformerMixin
 from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OrdinalEncoder
 
 
-class Preprocessor:
+class Preprocessor(TransformerMixin):
+
+    def fit_transform(self, X, y=None, **fit_params):
+        """
+        Preprocessing: Sex, Embarked -> Categorial
+        Preprocessing: Drop Columns Name, Ticket, Cabin
+        :param df:
+        :return: tuple (X, y)
+        """
+        df_pp = self.drop(X)
+
+        df_pp = self.process_categories(df_pp)
+
+
+        # df_pp = self.outlier_detection(df_pp)
+
+        # df_pp = df_pp.assign(Fare=StandardScaler().fit_transform(df_pp[["Fare"]].to_numpy()))
+
+        return (df_pp, df_pp.drop(axis=1, labels=["Survived"]), df_pp["Survived"])
 
     def process_categories(self, df: DataFrame) -> DataFrame:
         """
@@ -36,24 +55,6 @@ class Preprocessor:
 
         return df.iloc[lof_mask != -1]
 
-
-    def process(self, df: DataFrame) -> tuple[DataFrame, DataFrame, Series]:
-        """
-        Preprocessing: Sex, Embarked -> Categorial
-        Preprocessing: Drop Columns Name, Ticket, Cabin
-        :param df:
-        :return: tuple (X, y)
-        """
-        df_pp = self.drop(df)
-
-        df_pp = self.process_categories(df_pp)
-
-
-        # df_pp = self.outlier_detection(df_pp)
-
-        # df_pp = df_pp.assign(Fare=StandardScaler().fit_transform(df_pp[["Fare"]].to_numpy()))
-
-        return (df_pp, df_pp.drop(axis=1, labels=["Survived"]), df_pp["Survived"])
 
 
 
