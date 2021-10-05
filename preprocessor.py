@@ -140,9 +140,10 @@ class Preprocessor(TransformerMixin):
     def fill_age(self, df: DataFrame) -> DataFrame:
 
         df_tmp = df.copy()
-        imputer = SimpleImputer(strategy='median')
-        df_tmp['Age'] = imputer.fit_transform(df_tmp[['Age']])
+        df_tmp['Age'].fillna(df['Age'].median(), inplace=True)
 
+        # imputer = SimpleImputer(strategy='median')
+        # df_tmp['Age'] = imputer.fit_transform(df_tmp[['Age']])
 
         return df_tmp
 
