@@ -37,6 +37,9 @@ class Preprocessor(TransformerMixin):
         if self.drop_original_columns:
             df_pp = df_pp.drop('Deck', axis=1)
 
+            # deck missing indicator
+        df_pp = self.engineer_deck_missing(df_pp, column_name='Deck_cat_missing')
+
         # calculate median Deck no for each class to fill nan of column Deck
         df_pp = self.fill_missing_deck(df_pp)
 
@@ -124,6 +127,14 @@ class Preprocessor(TransformerMixin):
             .map(lambda c:c[:1])
 
         return df_pp.assign(Deck=s_deck)
+
+    def engineer_deck_missing(self, df: DataFrame, column_name: string) -> DataFrame:
+        """
+        Adds column indicating whether Deck_cat has missing values
+        :param df:
+        :return:
+        """
+        return df.assign(**{'{}'.format(column_name): df['Deck_cat'].isna()})
 
 
 
