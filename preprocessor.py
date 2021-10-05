@@ -43,6 +43,7 @@ class Preprocessor(TransformerMixin):
         # calculate median Deck no for each class to fill nan of column Deck
         df_pp = self.fill_missing_deck(df_pp)
 
+        df_pp = self.fill_age(df_pp)
 
         df_pp = df_pp.dropna()
 
@@ -135,6 +136,15 @@ class Preprocessor(TransformerMixin):
         :return:
         """
         return df.assign(**{'{}'.format(column_name): df['Deck_cat'].isna()})
+
+    def fill_age(self, df: DataFrame) -> DataFrame:
+
+        df_tmp = df.copy()
+        imputer = SimpleImputer(strategy='median')
+        df_tmp['Age'] = imputer.fit_transform(df_tmp[['Age']])
+
+
+        return df_tmp
 
 
 
