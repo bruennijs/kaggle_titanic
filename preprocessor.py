@@ -5,18 +5,21 @@ import numpy as np
 import pandas as pd
 
 from pandas import DataFrame, Series, concat
-from pandas.core.groupby import SeriesGroupBy, DataFrameGroupBy
+from pandas.core.groupby import DataFrameGroupBy
 from sklearn.base import TransformerMixin
-from sklearn.impute import SimpleImputer
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
-from sklearn.utils._testing import MinimalTransformer
 
 
-class Preprocessor(TransformerMixin, MinimalTransformer):
+class Preprocessor(TransformerMixin):
 
-    def __init__(self, drop_original_columns: bool = True, engineer_title: bool = True, drop_nans: bool=True, engineer_deck: bool = True) -> None:
+    def __init__(self, drop_original_columns: bool = True,
+                 engineer_title: bool = True,
+                 drop_nans: bool=True,
+                 engineer_deck: bool = True,
+                 engineer_family_size: bool = True) -> None:
         super().__init__()
+        self.engineer_family_size_ = engineer_family_size
         self.engineer_deck_ = engineer_deck
         self.drop_nans = drop_nans
         self.engineer_title_ = engineer_title
@@ -55,7 +58,7 @@ class Preprocessor(TransformerMixin, MinimalTransformer):
 
 
         # AGE: fill nan of age with median age
-        df_pp = self.fill_age(df_pp)
+        df_pp = self.interpolate_age(df_pp)
 
         # TITLE
         if self.engineer_title_:
@@ -63,6 +66,11 @@ class Preprocessor(TransformerMixin, MinimalTransformer):
             df_pp = self.ordinal_categories(df_pp, ['Title'])
             if self.drop_original_columns:
                 df_pp = df_pp.drop(['Title'], axis=1)
+
+        if self.engineer_family_size_:
+            df_pp['Family_size'] = df_pp['SibSp'] + df_pp['Parch']
+            if self.drop_original_columns:
+                df_pp = df_pp.drop(['SibSp', 'Parch'], axis=1)
 
         df_pp = self.ordinal_categories(df_pp, ['Sex', 'Embarked'])
 
@@ -145,7 +153,7 @@ class Preprocessor(TransformerMixin, MinimalTransformer):
         """
         return df.assign(**{'{}'.format(column_name): df['Deck_cat'].isna()})
 
-    def fill_age(self, df: DataFrame) -> DataFrame:
+    def interpolate_age(self, df: DataFrame) -> DataFrame:
 
         df_tmp = df.copy()
         df_tmp['Age'].fillna(df['Age'].median(), inplace=True)
